@@ -27,7 +27,7 @@
     {
       "name": "systemverilog-lsp",
       "description": "Verilog/SystemVerilog language server (Verible) for code intelligence, diagnostics, formatting, go-to-definition, and find-references",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "source": "./plugins/systemverilog-lsp",
       "category": "development",
       "strict": false,

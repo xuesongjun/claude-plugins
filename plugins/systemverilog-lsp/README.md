@@ -81,6 +81,32 @@ inc/defines.svh
 
 插件内置 PostToolUse hook：Claude 每次编辑 Verilog 文件后，自动运行 `verible-verilog-lint --autofix=inplace` 修复可自动修复的 lint 警告（如 trailing spaces），无需手动处理。
 
+### 代码格式化
+
+#### 手动格式化（Skill）
+
+使用 `/verible-format` 命令手动触发格式化。
+
+#### 自动格式化（Hook）
+
+在项目根目录创建 `.verible-format` 文件并启用 hook 开关，编辑 Verilog 文件后会自动格式化：
+
+```
+# .verible-format
+# hook: on 表示编辑后自动格式化，off 或省略表示关闭
+# hook: on
+
+--column_limit 120
+--indentation_spaces 2
+--port_declarations_alignment align
+--named_port_alignment align
+```
+
+**开关规则**：
+- 文件存在且包含 `# hook: on` → 自动格式化启用
+- 文件存在但无 `# hook: on` → 自动格式化关闭，`/verible-format` skill 仍按配置格式化
+- 文件不存在 → 自动格式化关闭，`/verible-format` skill 使用默认参数
+
 ## More Information
 - [Verible GitHub](https://github.com/chipsalliance/verible)
 - [Verible LS README](https://github.com/chipsalliance/verible/tree/master/verible/verilog/tools/ls)

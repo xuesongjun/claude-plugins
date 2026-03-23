@@ -8,6 +8,7 @@ import os
 
 VERILOG_EXTENSIONS = (".v", ".sv", ".svh", ".vh")
 
+
 def count_warnings(lint_cmd, file_path):
     """运行 lint 检查，返回警告数量"""
     r = subprocess.run(
@@ -18,6 +19,7 @@ def count_warnings(lint_cmd, file_path):
     if not output:
         return 0
     return len(output.split("\n"))
+
 
 def main():
     try:
@@ -34,7 +36,7 @@ def main():
             print(json.dumps({}))
             return
 
-        # 先检测警告数量
+        # 检测警告数量
         before = count_warnings(lint_cmd, file_path)
         if before == 0:
             print(json.dumps({}))
@@ -64,6 +66,7 @@ def main():
         print(json.dumps({"systemMessage": f"[verible-autofix] 执行出错: {str(e)}"}))
 
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

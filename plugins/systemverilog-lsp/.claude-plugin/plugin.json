@@ -1,0 +1,7 @@
+{
+  "name": "systemverilog-lsp",
+  "description": "Verilog/SystemVerilog language server skills and hooks",
+  "author": {
+    "name": "xuesongjun"
+  }
+}
