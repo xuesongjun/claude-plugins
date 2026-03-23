@@ -1,0 +1,16 @@
+{
+  "description": "Auto-fix Verible lint warnings after editing Verilog/SystemVerilog files",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python ${CLAUDE_PLUGIN_ROOT}/hooks/verible-autofix.py"
+          }
+        ]
+      }
+    ]
+  }
+}
