@@ -23,6 +23,10 @@ Verilog/SystemVerilog language server powered by [Verible](https://github.com/ch
 
 **Prerequisite**: Install `verible-verilog-ls` and add to PATH. See [plugins/systemverilog-lsp/README.md](plugins/systemverilog-lsp/README.md).
 
+**Features**:
+- LSP 启动时自动启用 `--rules_config_search`，支持项目级 `.rules.verible_lint` 配置
+- 内置 PostToolUse hook：编辑 Verilog 文件后自动运行 `verible-verilog-lint --autofix=inplace`，修复可自动修复的 lint 警告
+
 ### dev-workflow
 
 | Skill | Description | Trigger |
@@ -53,17 +57,21 @@ Verilog/SystemVerilog language server powered by [Verible](https://github.com/ch
 ```
 claude-plugins/
 ├── .claude-plugin/
-│   └── marketplace.json
+│   └── marketplace.json            # marketplace 注册入口
+├── CLAUDE.md                       # 项目开发规范
 ├── plugins/
-│   ├── systemverilog-lsp/
-│   │   └── README.md
-│   ├── dev-workflow/
+│   ├── systemverilog-lsp/          # LSP 插件（配置在 marketplace.json）
+│   │   ├── README.md
+│   │   └── hooks/
+│   │       ├── hooks.json          # PostToolUse hook 注册
+│   │       └── verible-autofix.py  # 自动修复 lint 警告
+│   ├── dev-workflow/               # Skill 插件
 │   │   ├── .claude-plugin/plugin.json
 │   │   └── skills/
-│   ├── test-studio/
+│   ├── test-studio/                # Skill 插件
 │   │   ├── .claude-plugin/plugin.json
 │   │   └── skills/
-│   └── code-quality/
+│   └── code-quality/               # Skill 插件
 │       ├── .claude-plugin/plugin.json
 │       └── skills/
 └── README.md
