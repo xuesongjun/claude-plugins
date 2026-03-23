@@ -4,8 +4,20 @@ import json
 import subprocess
 import sys
 import shutil
+import os
 
 VERILOG_EXTENSIONS = (".v", ".sv", ".svh", ".vh")
+
+def count_warnings(lint_cmd, file_path):
+    """运行 lint 检查，返回警告数量"""
+    r = subprocess.run(
+        [lint_cmd, "--rules_config_search", file_path],
+        capture_output=True, text=True, timeout=30
+    )
+    output = r.stderr.strip()
+    if not output:
+        return 0
+    return len(output.split("\n"))
 
 def main():
     try:
@@ -22,21 +34,34 @@ def main():
             print(json.dumps({}))
             return
 
-        result = subprocess.run(
+        # 先检测警告数量
+        before = count_warnings(lint_cmd, file_path)
+        if before == 0:
+            print(json.dumps({}))
+            return
+
+        # 执行 autofix
+        subprocess.run(
             [lint_cmd, "--rules_config_search", "--autofix=inplace", file_path],
             capture_output=True, text=True, timeout=30
         )
 
-        if result.returncode == 0:
-            print(json.dumps({}))
-        else:
-            # returncode != 0 means there are unfixable warnings, not an error
-            print(json.dumps({
-                "suppressOutput": True
-            }))
+        # 再次检测剩余警告
+        after = count_warnings(lint_cmd, file_path)
+        fixed = before - after
+        filename = os.path.basename(file_path)
 
-    except Exception:
-        print(json.dumps({}))
+        if fixed > 0 and after == 0:
+            msg = f"[verible-autofix] {filename}: 已自动修复 {fixed} 个 lint 警告"
+        elif fixed > 0:
+            msg = f"[verible-autofix] {filename}: 已自动修复 {fixed} 个警告，剩余 {after} 个需手动处理"
+        else:
+            msg = f"[verible-autofix] {filename}: {after} 个警告无法自动修复，需手动处理"
+
+        print(json.dumps({"systemMessage": msg}))
+
+    except Exception as e:
+        print(json.dumps({"systemMessage": f"[verible-autofix] 执行出错: {str(e)}"}))
 
     sys.exit(0)
 
