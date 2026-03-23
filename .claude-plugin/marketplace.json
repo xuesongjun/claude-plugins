@@ -1,0 +1,47 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-plugins",
+  "description": "Personal Claude Code plugins: development workflow skills, code quality tools, and language server integrations",
+  "owner": {
+    "name": "xuesongjun"
+  },
+  "plugins": [
+    {
+      "name": "dev-workflow",
+      "description": "Development workflow skills: commit, save/sync progress, run application",
+      "source": "./plugins/dev-workflow",
+      "category": "productivity"
+    },
+    {
+      "name": "test-studio",
+      "description": "Test Studio project specific skills: fix-bug, add-page, add-reg-group",
+      "source": "./plugins/test-studio",
+      "category": "development"
+    },
+    {
+      "name": "code-quality",
+      "description": "Code quality skills: architecture, refactoring, testing",
+      "source": "./plugins/code-quality",
+      "category": "development"
+    },
+    {
+      "name": "systemverilog-lsp",
+      "description": "Verilog/SystemVerilog language server (Verible) for code intelligence, diagnostics, formatting, go-to-definition, and find-references",
+      "version": "1.0.0",
+      "source": "./plugins/systemverilog-lsp",
+      "category": "development",
+      "strict": false,
+      "lspServers": {
+        "verible": {
+          "command": "verible-verilog-ls",
+          "extensionToLanguage": {
+            ".v": "systemverilog",
+            ".sv": "systemverilog",
+            ".svh": "systemverilog",
+            ".vh": "systemverilog"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+# OS
+*.DS_Store
+.claude/
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node (if any MCP server added later)
+node_modules/
