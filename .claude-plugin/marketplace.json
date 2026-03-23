@@ -1,6 +1,6 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "claude-plugins",
+  "name": "xsj-plugins",
   "description": "Personal Claude Code plugins: development workflow skills, code quality tools, and language server integrations",
   "owner": {
     "name": "xuesongjun"
