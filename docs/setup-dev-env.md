@@ -9,9 +9,10 @@
 | 步骤 | 内容 | 说明 |
 |------|------|------|
 | 1 | 安装 MSYS2 | 通过 winget 安装，默认路径 `C:\msys64` |
-| 2 | 安装 MSYS2 包 | `git`、`verilator`（ucrt64 版本） |
-| 3 | 配置 Claude Code | 修改 `settings.json`，切换 Shell 为 MSYS2 bash |
-| 4 | 创建 `~/.bashrc` | 供 Claude Code 非交互式 bash 加载 |
+| 2 | 安装 MSYS2 包 | `verilator`（ucrt64 版本） |
+| 3 | 配置用户 PATH | 将 `C:\msys64\usr\bin` 和 `C:\msys64\ucrt64\bin` 加入用户 PATH |
+| 4 | 配置 Claude Code | 修改 `settings.json`，切换 Shell 为 MSYS2 bash |
+| 5 | 创建 `~/.bashrc` | 重定向 HOME 到 Windows 用户目录，供 Claude Code 非交互式 bash 加载 |
 
 脚本具备**幂等性**：重复执行不会覆盖已有配置。
 
@@ -134,12 +135,16 @@ verible-verilog-ls --version
 ```bash
 # 验证 Shell 环境
 echo $SHELL          # 应输出 /usr/bin/bash（MSYS2）
+echo $HOME           # 应输出 /c/Users/<用户名>（Windows 用户目录）
 which git            # 应找到 git
 which verilator      # 应找到 verilator
 which verible-verilog-ls  # 应找到 verible-verilog-ls（如已安装）
 
 # 验证 PATH 继承
 which node           # 如果 Node.js 在 Windows PATH 中，应能找到
+
+# 验证 git 配置继承
+git config --global --list  # 应能读取 Windows 用户目录下的 .gitconfig
 ```
 
 ---

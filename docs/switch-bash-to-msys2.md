@@ -67,19 +67,22 @@ scoop install msys2
 
 ---
 
-### 第二步：创建 `.bashrc` 文件（可选）
+### 第二步：创建 `.bashrc` 文件
 
-如需在 Claude Code 的 bash 环境中添加自定义配置，在 `C:\Users\<用户名>\.bashrc` 中写入：
+在 `C:\Users\<用户名>\.bashrc` 中写入：
 
 ```bash
-# 示例：覆盖 Git Bash 自带的精简版 perl（如果仍需兼容 Git Bash）
-# alias perl='/c/msys64/usr/bin/perl'
+# MSYS2_PATH_TYPE=inherit 已在 Claude Code settings.json 中配置，自动继承 Windows PATH
+# 此文件通过 BASH_ENV 在每个非交互式 bash 进程中自动加载
 
-# 示例：添加其他自定义工具路径
-# export PATH="/c/my-tools:$PATH"
+# 将 HOME 指向 Windows 用户目录，确保 git/ssh 等工具能找到正确的配置文件
+# MSYS2 默认 HOME=/home/<user>（即 C:\msys64\home\<user>），与 Windows 用户目录不一致
+export HOME="/c/Users/<用户名>"
 ```
 
-> **注意**：配置了 `MSYS2_PATH_TYPE=inherit` 后，Windows 用户 PATH 已完整继承，通常不需要在 `.bashrc` 中手动添加路径。
+> **为什么需要重定向 HOME？**
+>
+> MSYS2 bash 默认 `HOME=/home/<user>`（映射到 `C:\msys64\home\<user>`），而 Git for Windows 的 `.gitconfig` 和 SSH 的 `.ssh/` 都在 `C:\Users\<用户名>` 下。不重定向会导致 git 找不到用户配置（user.name、user.email 等）。
 
 ---
 
@@ -97,6 +100,9 @@ scoop install msys2
 # 确认 bash 来源
 echo $SHELL
 
+# 确认 HOME 指向 Windows 用户目录
+echo $HOME           # 应输出 /c/Users/<用户名>
+
 # 确认 PATH 包含 Windows 用户路径
 echo $PATH
 
@@ -104,6 +110,9 @@ echo $PATH
 which git && git --version
 which node && node --version
 which perl && perl --version | head -1
+
+# 验证 git 配置继承
+git config --global --list
 ```
 
 ---
@@ -126,9 +135,9 @@ Claude Code 每次执行 Bash 命令时，会启动一个**新的非交互式 ba
 
 ### Q：切换后 Git 操作是否正常？
 
-正常。MSYS2 bash 中可以使用：
-- MSYS2 自带的 git（通过 `pacman -S mingw-w64-ucrt-x86_64-git` 安装）
+正常。脚本生成的 `.bashrc` 会将 HOME 重定向到 Windows 用户目录，因此 git 能正确读取 `C:\Users\<用户名>\.gitconfig`。MSYS2 bash 中可以使用：
 - Windows PATH 中的 Git for Windows（`inherit` 模式下自动继承）
+- MSYS2 自带的 git（通过 `pacman -S git` 安装，位于 `/usr/bin/git`）
 
 ### Q：切换后能否使用 MSYS2 的 pacman 安装工具？
 

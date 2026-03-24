@@ -6,9 +6,10 @@
 .DESCRIPTION
     自动完成以下配置：
     1. 检测并安装 MSYS2（如未安装）
-    2. 通过 pacman 安装必要工具（git、verilator）
-    3. 配置 Claude Code settings.json（切换 bash 为 MSYS2）
-    4. 创建 ~/.bashrc
+    2. 通过 pacman 安装必要工具（verilator）
+    3. 将 MSYS2 路径加入 Windows 用户 PATH
+    4. 配置 Claude Code settings.json（切换 bash 为 MSYS2）
+    5. 创建 ~/.bashrc
 
     脚本具备幂等性：重复执行不会破坏已有配置。
 
@@ -154,7 +155,6 @@ function Install-Msys2Packages {
     # 需要安装的包列表
     # Key = 包名，Value = 安装后的可执行文件路径（用于检测是否已安装）
     $packages = [ordered]@{
-        "mingw-w64-ucrt-x86_64-git"        = "ucrt64\bin\git.exe"
         "mingw-w64-ucrt-x86_64-verilator"  = "ucrt64\bin\verilator_bin.exe"
     }
 
@@ -176,7 +176,54 @@ function Install-Msys2Packages {
 }
 
 # ─────────────────────────────────────────────
-# 步骤 3：配置 Claude Code settings.json
+# 步骤 3：将 MSYS2 路径加入 Windows 用户 PATH
+# ─────────────────────────────────────────────
+
+function Add-Msys2ToPath {
+    Write-Step "配置用户 PATH 环境变量"
+
+    # 需要加入用户 PATH 的 MSYS2 路径
+    $msys2Paths = @(
+        (Join-Path $Msys2Path "usr\bin"),     # coreutils: base64, cat, grep 等
+        (Join-Path $Msys2Path "ucrt64\bin")   # pacman 安装的 ucrt64 包: verilator 等
+    )
+
+    # 读取当前用户 PATH
+    $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+    if (-not $userPath) { $userPath = "" }
+    $pathEntries = $userPath -split ";" | Where-Object { $_ -ne "" }
+
+    $added = @()
+    foreach ($p in $msys2Paths) {
+        # 幂等：路径已存在则跳过（不区分大小写、忽略尾部反斜杠）
+        $normalized = $p.TrimEnd("\")
+        $alreadyExists = $pathEntries | Where-Object { $_.TrimEnd("\") -ieq $normalized }
+        if ($alreadyExists) {
+            Write-Skipped "$p 已在用户 PATH 中"
+        } else {
+            $pathEntries += $p
+            $added += $p
+        }
+    }
+
+    if ($added.Count -eq 0) {
+        return
+    }
+
+    # 写入用户 PATH
+    $newPath = ($pathEntries -join ";")
+    [Environment]::SetEnvironmentVariable("Path", $newPath, "User")
+
+    foreach ($p in $added) {
+        Write-Success "已添加到用户 PATH：$p"
+    }
+
+    # 同步更新当前进程的 PATH，后续步骤可立即使用
+    $env:Path = $newPath + ";" + [Environment]::GetEnvironmentVariable("Path", "Machine")
+}
+
+# ─────────────────────────────────────────────
+# 步骤 4：配置 Claude Code settings.json
 # ─────────────────────────────────────────────
 
 function Set-ClaudeConfig {
@@ -241,7 +288,7 @@ function Set-ClaudeConfig {
 }
 
 # ─────────────────────────────────────────────
-# 步骤 4：创建 ~/.bashrc
+# 步骤 5：创建 ~/.bashrc
 # ─────────────────────────────────────────────
 
 function New-Bashrc {
@@ -249,21 +296,29 @@ function New-Bashrc {
 
     $bashrcFile = Join-Path $env:USERPROFILE ".bashrc"
 
+    # 将 Windows 路径转为 MSYS2 格式（C:\Users\Mahdi → /c/Users/Mahdi）
+    $homeMsys = ($env:USERPROFILE -replace "\\", "/") -replace "^([A-Za-z]):", { "/" + $_.Groups[1].Value.ToLower() }
+
     if (Test-Path $bashrcFile) {
         Write-Skipped "~/.bashrc 已存在，保留原文件"
-        return
-    }
-
-    @"
+    } else {
+        @"
 # MSYS2_PATH_TYPE=inherit 已在 Claude Code settings.json 中配置，自动继承 Windows PATH
 # 此文件通过 BASH_ENV 在每个非交互式 bash 进程中自动加载
+
+# 将 HOME 指向 Windows 用户目录，确保 git/ssh 等工具能找到正确的配置文件
+# MSYS2 默认 HOME=/home/<user>（即 C:\msys64\home\<user>），与 Windows 用户目录不一致
+export HOME="$homeMsys"
 "@ | Set-Content $bashrcFile -Encoding UTF8
 
-    Write-Success "~/.bashrc 已创建：$bashrcFile"
+        Write-Success "~/.bashrc 已创建：$bashrcFile"
+    }
+
+    Write-Success "HOME 已重定向：/home/$env:USERNAME → $homeMsys（确保 git/ssh 读取正确的配置文件）"
 }
 
 # ─────────────────────────────────────────────
-# 步骤 5：输出摘要
+# 步骤 6：输出摘要
 # ─────────────────────────────────────────────
 
 function Write-Summary {
@@ -303,6 +358,7 @@ try {
 
     Install-Msys2
     Install-Msys2Packages
+    Add-Msys2ToPath
     Set-ClaudeConfig
     New-Bashrc
     Write-Summary
